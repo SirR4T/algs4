@@ -7,20 +7,14 @@ public class Percolation {
     public Percolation(int N)
     {
         size = N;
-        openness = new boolean[size+1][size+1];
-        uf = new QuickFindUF(size*size+2);    //for two extra virtual sites
+        openness = new boolean[size][size];
+        uf = new QuickFindUF(size*size + 2);    //for two extra virtual sites
         for (int i = 1; i <= size; i++)
         {
             for (int j = 1; j <= size; j++)
             {
-                openness[i][j] = false;
+                openness[i-1][j-1] = false;
             }
-        }
-        //setting up the virtual sites
-        for (int i = 1; i <= size; i++)
-        {
-            this.uf.union(0, linearize(1, i));
-            this.uf.union(N*N+1, linearize(N, i));
         }
     }
 
@@ -36,15 +30,9 @@ public class Percolation {
     private boolean isValid(int i, int j)
     {
         if (i <= 0 || i > size) 
-        {
-            throw new IndexOutOfBoundsException("row index i out of bounds");
             return false;
-        }
         if (j <= 0 || j > size) 
-        {
-            throw new IndexOutOfBoundsException("column index j out of bounds");
             return false;
-        }
         return true;
     }
 
@@ -52,32 +40,53 @@ public class Percolation {
     // open site (row i, column j) if it is not already
     public void open(int i, int j)
     {
-        if (!openness[i][j])
+        if (isValid(i, j))
         {
-            openness[i][j] = true;
-            if (isValid(i, j+1))
-                if (isOpen(i, j+1))
-                    uf.union(linearize(i, j), linearize(i, j+1));
-            if (isValid(i+1, j))
-                if (isOpen(i+1, j))
-                    uf.union(linearize(i, j), linearize(i+1, j));
-            if (isValid(i, j-1))
-                if (isOpen(i, j-1))
-                    uf.union(linearize(i, j), linearize(i, j-1));
-            if (isValid(i-1, j))
-                if (isOpen(i-1, j))
-                    uf.union(linearize(i, j), linearize(i-1, j));
+            if (!isOpen(i, j))
+            {
+                openness[i-1][j-1] = true;
+                if (isValid(i, j+1))
+                    if (isOpen(i, j+1))
+                        uf.union(linearize(i, j), linearize(i, j+1));
+                if (isValid(i+1, j))
+                    if (isOpen(i+1, j))
+                        uf.union(linearize(i, j), linearize(i+1, j));
+                if (isValid(i, j-1))
+                    if (isOpen(i, j-1))
+                        uf.union(linearize(i, j), linearize(i, j-1));
+                if (isValid(i-1, j))
+                    if (isOpen(i-1, j))
+                        uf.union(linearize(i, j), linearize(i-1, j));
+
+                if (i == 1)
+                    uf.union(linearize(i, j), 0);
+                else if (i == size-1)
+                    uf.union(linearize(i, j), size*size+1);
+            }
+        }
+        else
+        {
+            if (i <= 0 || i > size) 
+                throw new IndexOutOfBoundsException("row index i out of bounds");
+            if (j <= 0 || j > size)
+                throw new IndexOutOfBoundsException("column index j out of bounds");
         }
     }
 
     public boolean isOpen(int i, int j)    // is site (row i, column j) open?
     {
-        return openness[i][j];
+        if (isValid(i, j))
+            return openness[i-1][j-1];
+        else
+            throw new IndexOutOfBoundsException("wrong indices");
     }
 
     public boolean isFull(int i, int j)    // is site (row i, column j) full?
     {
-        return uf.connected(0, linearize(i, j));
+        if (isValid(i, j))
+            return uf.connected(0, linearize(i, j));
+        else
+            throw new IndexOutOfBoundsException("wrong indices");
     }
 
     public boolean percolates()            // does the system percolate?
@@ -92,6 +101,7 @@ public class Percolation {
             for (int j = 1; j <= size; j++)
             {
                 if (isOpen(i, j))
+                //if (openness[i-1][j-1])
                     StdOut.print("1 ");
                 else
                     StdOut.print("0 ");
@@ -105,12 +115,12 @@ public class Percolation {
         Percolation p = new Percolation(3);
         p.show();
         p.open(1, 1);
-//        p.open(1, 2);
+        p.open(1, 2);
         p.open(2, 2);
         p.open(2, 3);
         p.open(3, 3);
         p.show();
-        StdOut.println(p.percolates()?"yes":"no");
+        StdOut.println(p.percolates() ? "yes" : "no");
         return;
     }
 }
