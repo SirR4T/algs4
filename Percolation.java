@@ -1,0 +1,116 @@
+public class Percolation {
+    private boolean[][] openness;
+    private int size;
+    private QuickFindUF uf;                
+    
+    // create N-by-N grid, with all sites blocked
+    public Percolation(int N)
+    {
+        size = N;
+        openness = new boolean[size+1][size+1];
+        uf = new QuickFindUF(size*size+2);    //for two extra virtual sites
+        for (int i = 1; i <= size; i++)
+        {
+            for (int j = 1; j <= size; j++)
+            {
+                openness[i][j] = false;
+            }
+        }
+        //setting up the virtual sites
+        for (int i = 1; i <= size; i++)
+        {
+            this.uf.union(0, linearize(1, i));
+            this.uf.union(N*N+1, linearize(N, i));
+        }
+    }
+
+    // Assuming this function is used only to generate indices for the uf[] array,
+    // uf[0] and uf[N*N+1] are virtual sites.
+    // (1,1) -> 1, (size, size) -> size*size
+    private int linearize(int i, int j)
+    {
+        return (i-1)*size+j;
+    }
+
+    // To check whether indices i,j are valid coordinates for the NxN matrix of sites
+    private boolean isValid(int i, int j)
+    {
+        if (i <= 0 || i > size) 
+        {
+            throw new IndexOutOfBoundsException("row index i out of bounds");
+            return false;
+        }
+        if (j <= 0 || j > size) 
+        {
+            throw new IndexOutOfBoundsException("column index j out of bounds");
+            return false;
+        }
+        return true;
+    }
+
+    // open up the (i,j)th site, and also connect it to all its open neighbours.
+    // open site (row i, column j) if it is not already
+    public void open(int i, int j)
+    {
+        if (!openness[i][j])
+        {
+            openness[i][j] = true;
+            if (isValid(i, j+1))
+                if (isOpen(i, j+1))
+                    uf.union(linearize(i, j), linearize(i, j+1));
+            if (isValid(i+1, j))
+                if (isOpen(i+1, j))
+                    uf.union(linearize(i, j), linearize(i+1, j));
+            if (isValid(i, j-1))
+                if (isOpen(i, j-1))
+                    uf.union(linearize(i, j), linearize(i, j-1));
+            if (isValid(i-1, j))
+                if (isOpen(i-1, j))
+                    uf.union(linearize(i, j), linearize(i-1, j));
+        }
+    }
+
+    public boolean isOpen(int i, int j)    // is site (row i, column j) open?
+    {
+        return openness[i][j];
+    }
+
+    public boolean isFull(int i, int j)    // is site (row i, column j) full?
+    {
+        return uf.connected(0, linearize(i, j));
+    }
+
+    public boolean percolates()            // does the system percolate?
+    {
+        return uf.connected(0, size*size+1);
+    }
+
+    private void show()
+    {
+        for (int i = 1; i <= size; i++)
+        {
+            for (int j = 1; j <= size; j++)
+            {
+                if (isOpen(i, j))
+                    StdOut.print("1 ");
+                else
+                    StdOut.print("0 ");
+            }
+            StdOut.println();
+        }
+    }
+
+    public static void main(String[] args)
+    {
+        Percolation p = new Percolation(3);
+        p.show();
+        p.open(1, 1);
+//        p.open(1, 2);
+        p.open(2, 2);
+        p.open(2, 3);
+        p.open(3, 3);
+        p.show();
+        StdOut.println(p.percolates()?"yes":"no");
+        return;
+    }
+}
