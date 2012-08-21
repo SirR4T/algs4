@@ -1,14 +1,14 @@
 public class Percolation {
     private boolean[][] openness;
     private int size;
-    private QuickFindUF uf;                
+    private WeightedQuickUnionUF uf;                
     
     // create N-by-N grid, with all sites blocked
     public Percolation(int N)
     {
         size = N;
         openness = new boolean[size][size];
-        uf = new QuickFindUF(size*size + 2);    //for two extra virtual sites
+        uf = new WeightedQuickUnionUF(size*size + 2);    //for two extra virtual sites
         for (int i = 1; i <= size; i++)
         {
             for (int j = 1; j <= size; j++)
@@ -60,7 +60,7 @@ public class Percolation {
 
                 if (i == 1)
                     uf.union(linearize(i, j), 0);
-                else if (i == size-1)
+                if ( (i == size) && isFull(i, j) )
                     uf.union(linearize(i, j), size*size+1);
             }
         }
@@ -108,17 +108,16 @@ public class Percolation {
             }
             StdOut.println();
         }
+        for (int i = 0; i <= size*size+1; i++)
+            StdOut.print(uf.connected(0, i) ? "1 " : "0 ");
     }
 
     public static void main(String[] args)
     {
-        Percolation p = new Percolation(3);
+        Percolation p = new Percolation(1);
         p.show();
+        StdOut.println(p.percolates() ? "yes" : "no");
         p.open(1, 1);
-        p.open(1, 2);
-        p.open(2, 2);
-        p.open(2, 3);
-        p.open(3, 3);
         p.show();
         StdOut.println(p.percolates() ? "yes" : "no");
         return;
